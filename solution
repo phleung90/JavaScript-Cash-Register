@@ -1,0 +1,93 @@
+function checkCashRegister(price, cash, cid) {
+
+var billValues = {
+"PENNY":0.01,
+"NICKEL": 0.05,
+"DIME":0.1,
+"QUARTER":0.25,
+"ONE": 1,
+"FIVE": 5,
+"TEN": 10,
+"TWENTY": 20,
+"ONE HUNDRED":100
+};
+
+//Map all the value and get the number of bills, print out the bill one by one
+  var allTheMoney = cid.map(function(item){
+    var valueOfItem = item[1];
+    var nameOfCurrency = item[0];
+    var valueOfCurrency = billValues[nameOfCurrency];
+    var numberOfBills = Math.ceil(valueOfItem / valueOfCurrency);
+    var physicalBills = [];  
+
+    for(var i=0; i < numberOfBills; i++){
+      physicalBills.push({
+        name: nameOfCurrency,
+        value: valueOfCurrency
+      });
+    }
+    return physicalBills;
+  }).flat();
+
+//Sort the bill with descending order
+  allTheMoney.sort(function(a, b){
+    return b.value - a.value;
+  });
+  
+//Get the sum of the remaining
+  var sumOfAllMoney = allTheMoney.reduce(function(sum, item){
+    return sum + item.value;
+  }, 0);
+  sumOfAllMoney = Math.round(sumOfAllMoney * 100) / 100;
+  
+//Get the changes that have to be given
+  var changeToGive = cash - price;
+
+
+//Return situation when not enough money or exactly enough
+if(changeToGive > sumOfAllMoney){
+  return {
+    status: 'INSUFFICIENT_FUNDS', change:[]
+  };
+} else if(changeToGive === sumOfAllMoney){
+  return {
+    status: 'CLOSED', change:cid
+  };
+}
+
+// Calculate when the bill is still open 
+var changeGiven = 0;
+  var change = allTheMoney.reduce(function(accum, bill){
+    var valueStillOpen = changeToGive - changeGiven;    
+    valueStillOpen = Math.round(valueStillOpen * 100) / 100;
+    if(valueStillOpen > 0){
+      if(bill.value <= valueStillOpen){
+        var currentValue = accum[bill.name] || 0;
+        accum[bill.name] = currentValue + bill.value;
+        changeGiven = changeGiven + bill.value;
+      }
+    }
+    return accum;
+  }, {});
+  
+//Handle extra case
+   if(changeGiven < changeToGive){
+    return {
+      status: 'INSUFFICIENT_FUNDS', change:[]
+    };
+  }
+  
+//Format the answer
+  var changeInCIDFormat = Object.keys(change).map(function(d){
+    return [d, change[d]];
+  });
+
+// Here is your change, ma'am.
+  return {
+    status: 'OPEN',
+    change: changeInCIDFormat
+   }  
+}
+
+
+checkCashRegister(19.5, 20, [["PENNY", 0.5], ["NICKEL", 0], ["DIME", 0], ["QUARTER", 0], ["ONE", 0], ["FIVE", 0], ["TEN", 0], ["TWENTY", 0], ["ONE HUNDRED", 0]]);
